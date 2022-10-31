@@ -44,9 +44,24 @@
 #define ADDR                MCP4725A0_ADDR0 /**< \brief DAC address. */
 #define VDD                 3.3             /**< \brief DAC voltage supply. */
 
+/**
+ * \brief   I2C configuration structure.
+ */
+i2c_dev_t dev = {
+    .addr = ADDR,
+    .bus = I2C_BUS,
+};
+
 static volatile uint32_t frc1_count;
 
 uint8_t SYSTEM_LOG_LEVEL = LOG_DEBUG;
+
+static void wait_for_eeprom(i2c_dev_t *dev) {
+    while (mcp4725_eeprom_busy(dev)) {
+        log_debug("...DAC is busy, waiting...");
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
+}
 
 void frc1_interrupt_handler(void *arg) {
     gpio_toggle(GPIO_FRC1);
@@ -56,6 +71,13 @@ void frc1_interrupt_handler(void *arg) {
 void user_init(void) {
     uart_set_baud(0, UART_BAUD);
     log_set_level(SYSTEM_LOG_LEVEL);
+
+    i2c_init(I2C_BUS, GPIO_SCL, GPIO_SDA, I2C_FREQ_400K);
+
+    if (mcp4725_get_power_mode(&dev, true) != MCP4725_PM_NORMAL) {
+        mcp4725_set_power_mode(&dev, MCP4725_PM_NORMAL, true);
+        wait_for_eeprom(&dev);
+    }
 
     /* configure GPIOs */
     gpio_enable(GPIO_FRC1, GPIO_OUTPUT);
