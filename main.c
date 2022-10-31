@@ -36,8 +36,8 @@
 #include <log.h>
 
 /* macros */
-#define UART_BAUD       115200
-#define FREQ_FRC1       5000
+#define UART_BAUD           115200  /**< \brief Default UART baud rate. */
+#define FREQ_FRC1           5000    /**< \brief Frequency TIMER. */
 
 static volatile uint32_t frc1_count;
 

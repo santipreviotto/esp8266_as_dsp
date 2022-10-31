@@ -20,6 +20,6 @@
 #ifndef SRC_INCLUDE_PINOUT_CONFIGURATION_H_
 #define SRC_INCLUDE_PINOUT_CONFIGURATION_H_
 
-#define GPIO_FRC1       12
+#define GPIO_FRC1           12  /**< \brief GPIO for timer interruption. */
 
 #endif /* SRC_INCLUDE_PINOUT_CONFIGURATION_H_ */
