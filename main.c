@@ -38,11 +38,11 @@
 #include <log.h>
 
 /* macros */
-#define UART_BAUD           115200  /**< \brief Default UART baud rate. */
-#define FREQ_FRC1           5000    /**< \brief Frequency TIMER. */
-#define I2C_BUS             0
-#define ADDR                MCP4725A0_ADDR0
-#define VDD                 3.3
+#define UART_BAUD           115200          /**< \brief Default UART baud rate. */
+#define FREQ_FRC1           5000            /**< \brief Frequency TIMER. */
+#define I2C_BUS             0               /**< \brief I2C bus. */
+#define ADDR                MCP4725A0_ADDR0 /**< \brief DAC address. */
+#define VDD                 3.3             /**< \brief DAC voltage supply. */
 
 static volatile uint32_t frc1_count;
 
