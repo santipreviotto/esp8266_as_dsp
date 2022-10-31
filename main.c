@@ -28,6 +28,8 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <esp8266.h>
+#include <i2c/i2c.h>
+#include <mcp4725/mcp4725.h>
 
 /* configuration includes */
 #include <pinout_configuration.h>
