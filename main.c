@@ -17,9 +17,6 @@
  * Boston, MA 02110-1301, USA.
  */
 /** \file main.c */
-/* macros */
-#define UART_BAUD           115200  /**< \brief Default UART baud rate. */
-
 /* standard */
 #include <string.h>
 
@@ -35,6 +32,9 @@
 
 /* configuration includes */
 #include <pinout_configuration.h>
+
+/* macros */
+#define UART_BAUD           115200  /**< \brief Default UART baud rate. */
 
 /* system level for logs */
 uint8_t SYSTEM_LOG_LEVEL = LOG_INFO;
