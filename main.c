@@ -19,44 +19,56 @@
 /** \file main.c */
 /* standard */
 #include <string.h>
+#include <stdio.h>
 
 /* third party libs */
-#include <FreeRTOS.h>
-#include <task.h>
 #include <espressif/esp_common.h>
 #include <espressif/user_interface.h>
 #include <esp/uart.h>
-
-/* third party libs */
-#include <log.h>
+#include <FreeRTOS.h>
+#include <task.h>
+#include <esp8266.h>
 
 /* configuration includes */
 #include <pinout_configuration.h>
 
+/* third party libs */
+#include <log.h>
+
 /* macros */
-#define UART_BAUD           115200  /**< \brief Default UART baud rate. */
+#define UART_BAUD       115200
+#define FREQ_FRC1       5000
 
-/* system level for logs */
-uint8_t SYSTEM_LOG_LEVEL = LOG_INFO;
+static volatile uint32_t frc1_count;
 
-/**
- * \brief   It's an example task.
- */
-void sample_task(void *pvParameters) {
-    for (;;) {
-        log_info("Sample task executing ...");
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
+uint8_t SYSTEM_LOG_LEVEL = LOG_DEBUG;
+
+void frc1_interrupt_handler(void *arg) {
+    gpio_toggle(GPIO_FRC1);
+    frc1_count++;
 }
 
-/**
- * \brief   Program entrypoint.
- */
 void user_init(void) {
     uart_set_baud(0, UART_BAUD);
     log_set_level(SYSTEM_LOG_LEVEL);
-    log_info("SDK version: %s ", sdk_system_get_sdk_version());
 
-    /* initialize tasks */
-    xTaskCreate(&sample_task, "sample task", 256, NULL, 2, NULL);
+    /* configure GPIOs */
+    gpio_enable(GPIO_FRC1, GPIO_OUTPUT);
+    gpio_write(GPIO_FRC1, true);
+
+    /* stop both timers and mask their interrupts as a precaution */
+    timer_set_interrupts(FRC1, false);
+    timer_set_run(FRC1, false);
+
+    /* set up ISRs */
+    _xt_isr_attach(INUM_TIMER_FRC1, frc1_interrupt_handler, NULL);
+
+    /* configure timer frequencies */
+    timer_set_frequency(FRC1, FREQ_FRC1);
+
+    /* unmask interrupts and start timers */
+    timer_set_interrupts(FRC1, true);
+    timer_set_run(FRC1, true);
+
+    gpio_write(GPIO_FRC1, false);
 }
