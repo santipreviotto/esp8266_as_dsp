@@ -33,6 +33,7 @@
 
 /* configuration includes */
 #include <pinout_configuration.h>
+#include <signal.h>
 
 /* third party libs */
 #include <log.h>
