@@ -20,8 +20,8 @@
 #ifndef SRC_INCLUDE_SIGNAL_H_
 #define SRC_INCLUDE_SIGNAL_H_
 
-#define N_COS         17
-#define N_TRIANG      20
+#define N_COS         17    /**< \brief Samples for cosine. */
+#define N_TRIANG      20    /**< \brief Samples for triangle. */
 
 float signal_triangle[N_TRIANG] = { 0.50, 0.55, 0.60, 0.65, 0.70,
                                     0.75, 0.80, 0.85, 0.90, 0.95,
