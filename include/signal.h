@@ -16,12 +16,20 @@
  * the Free Software Foundation, Inc., 51 Franklin Street,
  * Boston, MA 02110-1301, USA.
  */
-/** \file pinout_configuration.h */
-#ifndef SRC_INCLUDE_PINOUT_CONFIGURATION_H_
-#define SRC_INCLUDE_PINOUT_CONFIGURATION_H_
+/** \file signal.h */
+#ifndef SRC_INCLUDE_SIGNAL_H_
+#define SRC_INCLUDE_SIGNAL_H_
 
-#define GPIO_SDA            4   /**< \brief GPIO for data I2C. */
-#define GPIO_SCL            5   /**< \brief GPIO for clock I2C. */
-#define GPIO_FRC1           12  /**< \brief GPIO for timer interruption. */
+#define N_COS         17    /**< \brief Samples for cosine. */
+#define N_TRIANG      20    /**< \brief Samples for triangle. */
 
-#endif /* SRC_INCLUDE_PINOUT_CONFIGURATION_H_ */
+float signal_triangle[N_TRIANG] = { 0.50, 0.55, 0.60, 0.65, 0.70,
+                                    0.75, 0.80, 0.85, 0.90, 0.95,
+                                    1.00, 0.95, 0.90, 0.85, 0.80,
+                                    0.75, 0.70, 0.65, 0.60, 0.55 };
+
+float signal_cos[N_COS] = { 2.000, 1.924, 1.707, 1.383, 1.000, 0.617,
+                            0.293, 0.075, 0.000, 0.076, 0.293, 0.617,
+                            1.000, 1.383, 1.707, 1.924, 2.000 };
+
+#endif /* SRC_INCLUDE_SIGNAL_H_ */
