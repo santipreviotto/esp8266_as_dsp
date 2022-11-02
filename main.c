@@ -57,6 +57,9 @@ static volatile uint32_t frc1_count;
 
 uint8_t SYSTEM_LOG_LEVEL = LOG_DEBUG;
 
+/**
+ * \brief   DAC memory release function.
+ */
 static void wait_for_eeprom(i2c_dev_t *dev) {
     while (mcp4725_eeprom_busy(dev)) {
         log_debug("...DAC is busy, waiting...");
@@ -64,6 +67,9 @@ static void wait_for_eeprom(i2c_dev_t *dev) {
     }
 }
 
+/**
+ * \brief   Interrupt routine function.
+ */
 void frc1_interrupt_handler(void *arg) {
     gpio_toggle(GPIO_FRC1);
     frc1_count++;
@@ -73,28 +79,30 @@ void user_init(void) {
     uart_set_baud(0, UART_BAUD);
     log_set_level(SYSTEM_LOG_LEVEL);
 
+    /* I2C initialization */
     i2c_init(I2C_BUS, GPIO_SCL, GPIO_SDA, I2C_FREQ_400K);
 
+    /* DAC setup */
     if (mcp4725_get_power_mode(&dev, true) != MCP4725_PM_NORMAL) {
         mcp4725_set_power_mode(&dev, MCP4725_PM_NORMAL, true);
         wait_for_eeprom(&dev);
     }
 
-    /* configure GPIOs */
+    /* GPIO setup */
     gpio_enable(GPIO_FRC1, GPIO_OUTPUT);
     gpio_write(GPIO_FRC1, true);
 
-    /* stop both timers and mask their interrupts as a precaution */
+    /* stop timer and mask their interrupt as a precaution */
     timer_set_interrupts(FRC1, false);
     timer_set_run(FRC1, false);
 
-    /* set up ISRs */
+    /* ISR setup */
     _xt_isr_attach(INUM_TIMER_FRC1, frc1_interrupt_handler, NULL);
 
-    /* configure timer frequencies */
+    /* configure timer frequencie */
     timer_set_frequency(FRC1, FREQ_FRC1);
 
-    /* unmask interrupts and start timers */
+    /* unmask interrupt and start timer */
     timer_set_interrupts(FRC1, true);
     timer_set_run(FRC1, true);
 
