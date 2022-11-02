@@ -21,7 +21,7 @@
 #define SRC_INCLUDE_PINOUT_CONFIGURATION_H_
 
 #define GPIO_SDA            4   /**< \brief GPIO for data I2C. */
-#define GPIO_SCL            5   /**< \brief GPIO for clock I2C. */  
+#define GPIO_SCL            5   /**< \brief GPIO for clock I2C. */
 #define GPIO_FRC1           12  /**< \brief GPIO for timer interruption. */
 
 #endif /* SRC_INCLUDE_PINOUT_CONFIGURATION_H_ */
