@@ -54,6 +54,7 @@ i2c_dev_t dev = {
 };
 
 static volatile uint32_t frc1_count;
+volatile uint8_t sample;
 
 uint8_t SYSTEM_LOG_LEVEL = LOG_DEBUG;
 
@@ -71,13 +72,21 @@ static void wait_for_eeprom(i2c_dev_t *dev) {
  * \brief   Interrupt routine function.
  */
 void frc1_interrupt_handler(void *arg) {
+    if (sample > N_COS-1) {
+        sample = 0;
+        mcp4725_set_voltage(&dev, VDD, signal_cos[sample], false);
+    }
+    mcp4725_set_voltage(&dev, VDD, signal_cos[sample], false);
     gpio_toggle(GPIO_FRC1);
+    sample++;
     frc1_count++;
 }
 
 void user_init(void) {
     uart_set_baud(0, UART_BAUD);
     log_set_level(SYSTEM_LOG_LEVEL);
+
+    sample = 0;
 
     /* I2C initialization */
     i2c_init(I2C_BUS, GPIO_SCL, GPIO_SDA, I2C_FREQ_400K);
