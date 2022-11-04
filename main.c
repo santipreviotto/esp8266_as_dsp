@@ -39,14 +39,14 @@
 #include <log.h>
 
 /* macros */
-#define UART_BAUD           115200          /**< \brief Default UART baud rate. */
-#define FREQ_FRC1           200             /**< \brief Frequency TIMER. */
-#define I2C_BUS             0               /**< \brief I2C bus. */
-#define ADDR                MCP4725A0_ADDR0 /**< \brief DAC address. */
-#define VDD                 3.3             /**< \brief DAC voltage supply. */
-#define SYSTEM_VOLTAGE      3.3             /**< \brief Default system voltage */
-#define ADC_RESOLUTION      1023            /**< \brief ADC resolution excluding 0 */
-
+#define UART_BAUD           115200                      /**< \brief Default UART baud rate. */
+#define FREQ_FRC1           200                         /**< \brief Frequency TIMER. */
+#define I2C_BUS             0                           /**< \brief I2C bus. */
+#define ADDR                MCP4725A0_ADDR0             /**< \brief DAC address. */
+#define SYSTEM_VOLTAGE      3.3                         /**< \brief Default system voltage */
+#define ADC_RESOLUTION      1023                        /**< \brief ADC resolution excluding 0 */
+#define PERIOD_MS           1000                        /**< \brief ADC time in milliseconds. */
+#define PERIOD              pdMS_TO_TICKS(PERIOD_MS)    /**< \brief ADC time in ticks. */
 
 /**
  * \brief   I2C configuration structure.
@@ -81,9 +81,9 @@ static void wait_for_eeprom(i2c_dev_t *dev) {
 void frc1_interrupt_handler(void *arg) {
     if (sample > N_COS-1) {
         sample = 0;
-        mcp4725_set_voltage(&dev, VDD, signal_cos[sample], false);
+        mcp4725_set_voltage(&dev, SYSTEM_VOLTAGE, signal_cos[sample], false);
     }
-    mcp4725_set_voltage(&dev, VDD, signal_cos[sample], false);
+    mcp4725_set_voltage(&dev, SYSTEM_VOLTAGE, signal_cos[sample], false);
     gpio_toggle(GPIO_FRC1);
     sample++;
     frc1_count++;
@@ -127,7 +127,7 @@ void user_init(void) {
     BaseType_t xReturned;
     xReturned = xTaskCreate(&adc_task,
                             "adc_task",
-                            configMINIMAL_STACK_SIZE,
+                            configMINIMAL_STACK_SIZE*2,
                             NULL,
                             tskIDLE_PRIORITY+1,
                             &xHandle1);
@@ -139,10 +139,12 @@ void user_init(void) {
 }
 
 void adc_task(void *pvParameters) {
+    TickType_t xPeriodicity =  PERIOD;
     while (true) {
         adc_value = sdk_system_adc_read();
         adc_voltage = adc_value*(SYSTEM_VOLTAGE/ADC_RESOLUTION);
+        TickType_t xLastWakeTime = xTaskGetTickCount();
         log_debug("ADC Voltage: %.1f", adc_voltage);
-        vTaskDelay(10 / portTICK_PERIOD_MS);
-    } 
+        vTaskDelayUntil(&xLastWakeTime , xPeriodicity);
+    }
 }
