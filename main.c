@@ -40,10 +40,13 @@
 
 /* macros */
 #define UART_BAUD           115200          /**< \brief Default UART baud rate. */
-#define FREQ_FRC1           5000            /**< \brief Frequency TIMER. */
+#define FREQ_FRC1           200             /**< \brief Frequency TIMER. */
 #define I2C_BUS             0               /**< \brief I2C bus. */
 #define ADDR                MCP4725A0_ADDR0 /**< \brief DAC address. */
 #define VDD                 3.3             /**< \brief DAC voltage supply. */
+#define SYSTEM_VOLTAGE      3.3             /**< \brief Default system voltage */
+#define ADC_RESOLUTION      1023            /**< \brief ADC resolution excluding 0 */
+
 
 /**
  * \brief   I2C configuration structure.
@@ -53,8 +56,12 @@ i2c_dev_t dev = {
     .bus = I2C_BUS,
 };
 
+void adc_task(void *pvParameters);
+
 static volatile uint32_t frc1_count;
 volatile uint8_t sample;
+uint16_t adc_value;
+float adc_voltage;
 
 uint8_t SYSTEM_LOG_LEVEL = LOG_DEBUG;
 
@@ -116,4 +123,26 @@ void user_init(void) {
     timer_set_run(FRC1, true);
 
     gpio_write(GPIO_FRC1, false);
+    TaskHandle_t xHandle1 = NULL;
+    BaseType_t xReturned;
+    xReturned = xTaskCreate(&adc_task,
+                            "adc_task",
+                            configMINIMAL_STACK_SIZE,
+                            NULL,
+                            tskIDLE_PRIORITY+1,
+                            &xHandle1);
+    if (xReturned == pdPASS) {
+        log_trace("Task for adc is created");
+    } else {
+        log_error("Could not allocate memory for adc task");
+    }
+}
+
+void adc_task(void *pvParameters) {
+    while (true) {
+        adc_value = sdk_system_adc_read();
+        adc_voltage = adc_value*(SYSTEM_VOLTAGE/ADC_RESOLUTION);
+        log_debug("ADC Voltage: %.1f", adc_voltage);
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+    } 
 }
