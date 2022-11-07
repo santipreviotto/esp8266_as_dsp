@@ -33,7 +33,6 @@
 
 /* configuration includes */
 #include <pinout_configuration.h>
-#include <signal.h>
 
 /* third party libs */
 #include <log.h>
@@ -59,7 +58,6 @@ i2c_dev_t dev = {
 // void adc_task(void *pvParameters);
 
 volatile uint32_t frc1_count;
-volatile uint8_t sample;
 volatile uint16_t adc_value;
 volatile float adc_voltage;
 
