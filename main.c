@@ -33,7 +33,7 @@
 
 /* configuration includes */
 #include <pinout_configuration.h>
-// #include <signal.h>
+#include <signal.h>
 
 /* third party libs */
 #include <log.h>
@@ -45,7 +45,7 @@
 #define ADDR                MCP4725A0_ADDR0             /**< \brief DAC address. */
 #define SYSTEM_VOLTAGE      3.3                         /**< \brief Default system voltage */
 #define ADC_RESOLUTION      1023                        /**< \brief ADC resolution excluding 0 */
-#define PERIOD_MS           500                         /**< \brief ADC time in milliseconds. */
+#define PERIOD_MS           10                         /**< \brief ADC time in milliseconds. */
 #define PERIOD              pdMS_TO_TICKS(PERIOD_MS)    /**< \brief ADC time in ticks. */
 
 /**
@@ -56,7 +56,7 @@ i2c_dev_t dev = {
     .bus = I2C_BUS,
 };
 
-void adc_task(void *pvParameters);
+// void adc_task(void *pvParameters);
 
 volatile uint32_t frc1_count;
 volatile uint8_t sample;
@@ -113,27 +113,4 @@ void user_init(void) {
     /* unmask interrupt and start timer */
     timer_set_interrupts(FRC1, true);
     timer_set_run(FRC1, true);
-
-    TaskHandle_t xHandle1 = NULL;
-    BaseType_t xReturned;
-    xReturned = xTaskCreate(&adc_task,
-                            "adc_task",
-                            configMINIMAL_STACK_SIZE*2,
-                            NULL,
-                            tskIDLE_PRIORITY+1,
-                            &xHandle1);
-    if (xReturned == pdPASS) {
-        log_trace("Task for adc is created");
-    } else {
-        log_error("Could not allocate memory for adc task");
-    }
-}
-
-void adc_task(void *pvParameters) {
-    TickType_t xPeriodicity =  PERIOD;
-    while (true) {
-        TickType_t xLastWakeTime = xTaskGetTickCount();
-        log_debug("ADC: %.2f", adc_voltage);
-        vTaskDelayUntil(&xLastWakeTime , xPeriodicity);
-    }
 }
