@@ -77,12 +77,7 @@ void wait_for_eeprom(i2c_dev_t *dev) {
     }
 }
 
-/**
- * \brief   Interrupt routine function.
- */
-void frc1_interrupt_handler(void *arg) {
-    adc_value = sdk_system_adc_read();
-    adc_voltage = adc_value*(SYSTEM_VOLTAGE/ADC_RESOLUTION);
+volatile float filter_calc() {
     input[0] = adc_voltage;
     add = 0;
     for (int i = 0; i < N; i ++) {
@@ -92,6 +87,27 @@ void frc1_interrupt_handler(void *arg) {
     for (int i = 0; i < N-1; i ++) {
         input[i+1] = input[i];
     }
+    return filter_output;
+}
+
+/**
+ * \brief   Interrupt routine function.
+ */
+void frc1_interrupt_handler(void *arg) {
+    adc_value = sdk_system_adc_read();
+    adc_voltage = adc_value*(SYSTEM_VOLTAGE/ADC_RESOLUTION);
+    /*
+    input[0] = adc_voltage;
+    add = 0;
+    for (int i = 0; i < N; i ++) {
+        add = add + input[i];
+    }
+    filter_output = add / N;
+    for (int i = 0; i < N-1; i ++) {
+        input[i+1] = input[i];
+    }
+    */
+    filter_output = filter_calc();
     mcp4725_set_voltage(&dev, SYSTEM_VOLTAGE, filter_output, false);
     frc1_count++;
 }
