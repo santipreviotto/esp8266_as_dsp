@@ -39,13 +39,14 @@
 
 /* macros */
 #define UART_BAUD           115200                      /**< \brief Default UART baud rate. */
-#define FREQ_FRC1           200                         /**< \brief Frequency TIMER. */
+#define FREQ_FRC1           1000                        /**< \brief Frequency TIMER. */
 #define I2C_BUS             0                           /**< \brief I2C bus. */
 #define ADDR                MCP4725A0_ADDR0             /**< \brief DAC address. */
-#define SYSTEM_VOLTAGE      3.3                         /**< \brief Default system voltage */
-#define ADC_RESOLUTION      1023                        /**< \brief ADC resolution excluding 0 */
-#define PERIOD_MS           10                         /**< \brief ADC time in milliseconds. */
+#define SYSTEM_VOLTAGE      3.3                         /**< \brief Default system voltage. */
+#define ADC_RESOLUTION      1023                        /**< \brief ADC resolution excluding 0. */
+#define PERIOD_MS           10                          /**< \brief ADC time in milliseconds. */
 #define PERIOD              pdMS_TO_TICKS(PERIOD_MS)    /**< \brief ADC time in ticks. */
+#define N                   10                          /**< \brief Samples for filter. */
 
 /**
  * \brief   I2C configuration structure.
@@ -55,11 +56,12 @@ i2c_dev_t dev = {
     .bus = I2C_BUS,
 };
 
-// void adc_task(void *pvParameters);
-
 volatile uint32_t frc1_count;
 volatile uint16_t adc_value;
 volatile float adc_voltage;
+volatile float input[N];
+volatile float filter_output;
+volatile float add;
 
 uint8_t SYSTEM_LOG_LEVEL = LOG_DEBUG;
 
@@ -76,18 +78,44 @@ void wait_for_eeprom(i2c_dev_t *dev) {
 }
 
 /**
+ * \brief   Filter calcule.
+ * \return  filter_output
+ */
+volatile float filter_calc() {
+    input[0] = adc_voltage;
+    add = 0;
+    for (int i = 0; i < N; i ++) {
+        add = add + input[i];
+    }
+    filter_output = add / N;
+    for (int i = 0; i < N-1; i ++) {
+        input[i+1] = input[i];
+    }
+    return filter_output;
+}
+
+/**
  * \brief   Interrupt routine function.
  */
 void frc1_interrupt_handler(void *arg) {
     adc_value = sdk_system_adc_read();
     adc_voltage = adc_value*(SYSTEM_VOLTAGE/ADC_RESOLUTION);
-    mcp4725_set_voltage(&dev, SYSTEM_VOLTAGE, adc_voltage, false);
+    filter_output = filter_calc();
+    mcp4725_set_voltage(&dev, SYSTEM_VOLTAGE, filter_output, false);
     frc1_count++;
 }
 
+/**
+ * \brief   Program entrypoint.
+ */
 void user_init(void) {
     uart_set_baud(0, UART_BAUD);
     log_set_level(SYSTEM_LOG_LEVEL);
+
+    /* Filter input initialization */
+    for (int i = 0; i < N; i ++) {
+        input[i] = 0;
+    }
 
     /* I2C initialization */
     i2c_init(I2C_BUS, GPIO_SCL, GPIO_SDA, I2C_FREQ_400K);
