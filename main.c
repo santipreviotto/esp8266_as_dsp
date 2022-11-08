@@ -61,6 +61,7 @@ volatile uint16_t adc_value;
 volatile float adc_voltage;
 volatile float input[N];
 volatile float filter_output;
+volatile float add;
 
 uint8_t SYSTEM_LOG_LEVEL = LOG_DEBUG;
 
@@ -83,7 +84,11 @@ void frc1_interrupt_handler(void *arg) {
     adc_value = sdk_system_adc_read();
     adc_voltage = adc_value*(SYSTEM_VOLTAGE/ADC_RESOLUTION);
     input[0] = adc_voltage;
-    filter_output = (input[0] + input[1] + input[2] + input[3] + input[4] + input[5] + input[6] + input[7] + input[8] + input[9]) / N;
+    add = 0;
+    for (int i = 0; i < N; i ++) {
+        add = add + input[i];
+    }
+    filter_output = add / N;
     for (int i = 0; i < N-1; i ++) {
         input[i+1] = input[i];
     }
