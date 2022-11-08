@@ -46,6 +46,7 @@
 #define ADC_RESOLUTION      1023                        /**< \brief ADC resolution excluding 0 */
 #define PERIOD_MS           10                         /**< \brief ADC time in milliseconds. */
 #define PERIOD              pdMS_TO_TICKS(PERIOD_MS)    /**< \brief ADC time in ticks. */
+#define N                   10
 
 /**
  * \brief   I2C configuration structure.
@@ -58,8 +59,8 @@ i2c_dev_t dev = {
 volatile uint32_t frc1_count;
 volatile uint16_t adc_value;
 volatile float adc_voltage;
-volatile float x[10] = {0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00};
-volatile float y[1] = {0.00};
+volatile float input[N];
+volatile float filter_output;
 
 uint8_t SYSTEM_LOG_LEVEL = LOG_DEBUG;
 
@@ -81,20 +82,22 @@ void wait_for_eeprom(i2c_dev_t *dev) {
 void frc1_interrupt_handler(void *arg) {
     adc_value = sdk_system_adc_read();
     adc_voltage = adc_value*(SYSTEM_VOLTAGE/ADC_RESOLUTION);
-    x[0] = adc_voltage;
-    
-    y[0] = (x[0] + x[1] + x[2] + x[3] + x[4] + x[5] + x[6] + x[7] + x[8] + x[9]) / 10;
-    for (int i = 0; i < 9; i ++) {
-        x[i+1] = x[i];
+    input[0] = adc_voltage;
+    filter_output = (input[0] + input[1] + input[2] + input[3] + input[4] + input[5] + input[6] + input[7] + input[8] + input[9]) / N;
+    for (int i = 0; i < N-1; i ++) {
+        input[i+1] = input[i];
     }
-    mcp4725_set_voltage(&dev, SYSTEM_VOLTAGE, adc_voltage, false);
-    // mcp4725_set_voltage(&dev, SYSTEM_VOLTAGE, adc_voltage, false);
+    mcp4725_set_voltage(&dev, SYSTEM_VOLTAGE, filter_output, false);
     frc1_count++;
 }
 
 void user_init(void) {
     uart_set_baud(0, UART_BAUD);
     log_set_level(SYSTEM_LOG_LEVEL);
+
+    for (int i = 0; i < N; i ++) {
+        input[i] = 0;
+    }
 
     /* I2C initialization */
     i2c_init(I2C_BUS, GPIO_SCL, GPIO_SDA, I2C_FREQ_400K);
