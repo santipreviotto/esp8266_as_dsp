@@ -39,7 +39,7 @@
 
 /* macros */
 #define UART_BAUD           115200                      /**< \brief Default UART baud rate. */
-#define FREQ_FRC1           200                         /**< \brief Frequency TIMER. */
+#define FREQ_FRC1           1000                         /**< \brief Frequency TIMER. */
 #define I2C_BUS             0                           /**< \brief I2C bus. */
 #define ADDR                MCP4725A0_ADDR0             /**< \brief DAC address. */
 #define SYSTEM_VOLTAGE      3.3                         /**< \brief Default system voltage */
@@ -55,11 +55,11 @@ i2c_dev_t dev = {
     .bus = I2C_BUS,
 };
 
-// void adc_task(void *pvParameters);
-
 volatile uint32_t frc1_count;
 volatile uint16_t adc_value;
 volatile float adc_voltage;
+volatile float x[10] = {0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00};
+volatile float y[1] = {0.00};
 
 uint8_t SYSTEM_LOG_LEVEL = LOG_DEBUG;
 
@@ -81,7 +81,14 @@ void wait_for_eeprom(i2c_dev_t *dev) {
 void frc1_interrupt_handler(void *arg) {
     adc_value = sdk_system_adc_read();
     adc_voltage = adc_value*(SYSTEM_VOLTAGE/ADC_RESOLUTION);
+    x[0] = adc_voltage;
+    
+    y[0] = (x[0] + x[1] + x[2] + x[3] + x[4] + x[5] + x[6] + x[7] + x[8] + x[9]) / 10;
+    for (int i = 0; i < 9; i ++) {
+        x[i+1] = x[i];
+    }
     mcp4725_set_voltage(&dev, SYSTEM_VOLTAGE, adc_voltage, false);
+    // mcp4725_set_voltage(&dev, SYSTEM_VOLTAGE, adc_voltage, false);
     frc1_count++;
 }
 
